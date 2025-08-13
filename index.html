@@ -2,7 +2,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>GRF Map Catalog</title>
+  <title>Index Map Show Map Example</title>
   <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.81/calcite.esm.js"></script>
   <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.81/calcite.css" />
    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">  
@@ -251,13 +251,14 @@
     "esri/Map",
     "esri/views/MapView",
     "esri/layers/FeatureLayer",
+    "esri/layers/TileLayer",
     "esri/symbols/WebStyleSymbol",
     "esri/Basemap",
     "esri/rest/support/TopFeaturesQuery",
     "esri/rest/support/TopFilter",
     "esri/widgets/Home",
     "esri/widgets/Search"
-  ], (Map, MapView, FeatureLayer, WebStyleSymbol, Basemap, TopFeaturesQuery, TopFilter, Home, Search) => (async () => {
+  ], (Map, MapView, FeatureLayer, TileLayer, WebStyleSymbol, Basemap, TopFeaturesQuery, TopFilter, Home, Search) => (async () => {
 
     // Create a style for the indexLayer
    const renderer = {
@@ -274,7 +275,7 @@
 
     const layer = new FeatureLayer({
       url:
-        "https://portal1-geo.sabu.mtu.edu/server/rest/services/Hosted/catalogdata_new/FeatureServer/0",
+        "https://portal1-geo.sabu.mtu.edu/server/rest/services/Hosted/mapcatalog2selection_ExportFeaturesselection_ExportFeatures/FeatureServer/0",
       outFields: ["*"],
       renderer: renderer,  
       maxScale: 24,
@@ -554,11 +555,38 @@ view.watch("zoom", function(newValue) {
         });       
         const extent = result.geometry.extent;
         // when clicking on a record zoom to its extent
-        view.goTo({ center: extent.expand(6) }, { duration: 400 });
+        view.goTo({ center: extent.expand(0.5) }, { duration: 400 });
 
       }
       var thumbUrl = result.attributes.filename;
       var itemTitle = result.attributes.title;
+      // Remove existing tile layers
+      map.allLayers.forEach(function(layer) {
+          if (layer.type === "tile" || layer.type === "web-tile") {
+              map.remove(layer);
+          }
+      });
+
+      const currentMapUrl = result.attributes.service_url;
+
+      let current_layer;
+
+      if (currentMapUrl.includes("{z}") && currentMapUrl.includes("{x}") && currentMapUrl.includes("{y}")) {
+          // Use WebTileLayer for XYZ tiles
+          current_layer = new WebTileLayer({
+              urlTemplate: currentMapUrl
+          });
+      } else {
+          // Use TileLayer for Esri services
+          current_layer = new TileLayer({
+              url: currentMapUrl
+          });
+      }
+
+      map.add(current_layer);
+
+      // push the current layer to the back
+      map.reorder(current_layer, 1);
       updateViewer();
     };
 
