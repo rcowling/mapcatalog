@@ -381,8 +381,9 @@ function setFeatureLayerFilter(expression) {
   layer.definitionExpression = expression;  
 }    
 
-view.watch("zoom", function(newValue) {
-  //var series = $('#setFilter').val();
+view.watch("extent", function(newValue) {
+  filterItems();
+/*  //var series = $('#setFilter').val();
   if (newValue < 6) {
     // at low zooms levels show all charts
     setFeatureLayerFilter("Shape__Area < ‎2206130383567.0");
@@ -401,7 +402,7 @@ view.watch("zoom", function(newValue) {
     setFeatureLayerFilter("Shape__Area < 12000000");
   } else if (newValue > 14) {
     setFeatureLayerFilter("Shape__Area < 2000000");
-  }
+  }*/
   //console.log("scale property changed: ", newValue);
 });
 
@@ -498,6 +499,8 @@ view.watch("zoom", function(newValue) {
       } 
       // Create a query string from the searchStrings array
       var queryString = searchStrings.join(" AND ");
+     // query.spatialRelationship = "intersects";
+      query.geometry = view.extent;
       // Execute the query from the query string
       query.where = queryString;
 
@@ -505,17 +508,18 @@ view.watch("zoom", function(newValue) {
       document.getElementById("result-block").open = true;
 
       const results = await layer.queryFeatures(query);
-      graphics = results.features;    
+      graphics = results.features;
+      console.log(graphics);    
 
       // Zoom to the result of the features
-      if (graphics.length > 0) {
+      /*if (graphics.length > 0) {
         var extent = results.features[0].geometry.extent;
         results.features.forEach(function(feature) {
             extent = extent.union(feature.geometry.extent);
         })
 
         view.goTo({ center: extent.expand(1.3) }, { duration: 400 }); 
-   	  }
+   	  }*/
 
       document.getElementById("result-block").innerHTML = "Results (<h10>" + graphics.length + "</h10>)"; 
 
@@ -555,7 +559,7 @@ view.watch("zoom", function(newValue) {
         });       
         const extent = result.geometry.extent;
         // when clicking on a record zoom to its extent
-        view.goTo({ center: extent.expand(0.5) }, { duration: 400 });
+        view.goTo({ center: extent }, { duration: 400 });
 
       }
       var thumbUrl = result.attributes.filename;
@@ -586,7 +590,7 @@ view.watch("zoom", function(newValue) {
       map.add(current_layer);
 
       // push the current layer to the back
-      map.reorder(current_layer, 1);
+      map.reorder(layer, 1);
       updateViewer();
     };
 
@@ -646,33 +650,6 @@ view.watch("zoom", function(newValue) {
         //viewer.zoomTo(1);
       },
     });  
-
-    // Remove the zoom-to popup action
-//     view.popup.actions = []; 
-
-    /*// Actions for the popup
-    var requestAction = {
-      // This text is displayed as a tooltip
-      title: "Request Item",
-      // The ID by which to reference the action in the event handler
-      id: "req-item",
-      // Sets the icon font used to style the action button
-      className: "esri-icon-launch-link-external"
-    };
-    // Adds the custom action to the popup.
-    view.popup.actions.push(requestAction);
-
-    // This event fires for each click on any action
-    view.popup.on("trigger-action", function(event){
-      // If the request item button is clicked launch the Google form
-      if(event.action.id === "req-item"){
-        // Get the file name from the current popup
-        var title = view.popup.selectedFeature.attributes.title;
-        var id = view.popup.selectedFeature.attributes.fid;
-        window.open(
-                  'https://docs.google.com/forms/d/e/1FAIpQLSeF2x2DCePE_m6HRsUSsf6pFaEhnMN-4cc3C79OFpvSIRv1mA/viewform?usp=pp_url&entry.1039013080=' + title + '(' + id + ')','"_blank"');
-      }
-    });  */
 
   // when the user clicks the thumbnail, open the viewer
   $(document).on('click','.esri-popup__content img', function(){   	
