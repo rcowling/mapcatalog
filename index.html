@@ -175,7 +175,7 @@
   <nav class="navbar navbar-expand-md navbar-light bg-light">
   <a class="navbar-brand" href="https://mtugrf.github.io/mapcatalog/" target="_blank" rel="noopener">
     <img src="husky.svg" width="50" height="50" class="d-inline-block align-top" alt="">
-      &nbsp;Geospatial Research Facility Map Catalog
+      &nbsp;Index with Georeferenced Maps Example
   </a>
   <div class="collapse navbar-collapse" id="navbarNav" style="">
         <ul class="navbar-nav mr-auto">           
@@ -212,12 +212,10 @@
               <calcite-radio-group-item value="DESC" checked>Yes</calcite-radio-group-item>
               <calcite-radio-group-item value="ASC">No</calcite-radio-group-item>
             </calcite-radio-group>
-          </calcite-label> -->
-          <calcite-label html-for="georef" layout="inline">
-          <calcite-checkbox id="georef" scale="l"></calcite-checkbox> Georeferenced maps only
-          </calcite-label>
+          </calcite-label> -->        
           <calcite-label>
             Select a Theme
+             </calcite-label>
             <calcite-select id="theme">
               <calcite-option label="Choose Theme" value="none" selected="true"></calcite-option>
               <calcite-option label="Fire Insurance Plans" value="Fire Insurance Plans"></calcite-option> 
@@ -225,14 +223,16 @@
               <calcite-option label="Mining Maps" value="Mining Maps"></calcite-option>
               <calcite-option label="Nautical Charts" value="Nautical"></calcite-option>
               <calcite-option label="Topographic" value="Topographic"></calcite-option>
-            </calcite-select>
-          </calcite-label>
+            </calcite-select>         
+                    
           <calcite-label>
-            Range Between Years
-            <!-- <calcite-slider id="control-count-per-state-el"   label-handles max-label="1979" max-value="1979" max="1979" min-value="1883"
-            min="1883" ticks="20"></calcite-slider> -->
+            Range Between Years           
           </calcite-label>    
-          <calcite-input id="startYear" style="width: 45%; display: inline-block"></calcite-input> <h11> - </h11> <calcite-input id="endYear" style="width: 45%; display: inline-block"></calcite-input>      
+          <calcite-input id="startYear" style="width: 45%; display: inline-block"></calcite-input> <h11> - </h11> <calcite-input id="endYear" style="width: 45%; display: inline-block"></calcite-input>
+          <calcite-label>
+            Overlay Map Opacity
+            </calcite-label> 
+            <calcite-slider value="100" id="slider"></calcite-slider>      
         <calcite-panel id="resultsDiv">
         <h4 class="heading" id="result-block" slot="header-content" style="font-size: var(--calcite-font-size--1); color: var(--calcite-ui-text-1);">
           Results
@@ -293,9 +293,22 @@
       center: [-88.5694, 47.1211],
       zoom: 7,
       highlightOptions: {
-      color: [255,204,0] // color of the highlight when a feature is selected
+      color: [255,204,0], // color of the highlight when a feature is selected
+      haloOpacity: 1,
+      fillOpacity: 0
       },
     });
+
+    // dock popup
+    view.popup = {
+      dockEnabled: true,
+      dockOptions: {
+        // Disables the dock button from the popup
+        buttonEnabled: false,
+        // Ignore the default sizes that trigger responsive docking
+        breakpoint: false
+      }
+    };  
 
     let homeWidget = new Home({
       view: view
@@ -377,38 +390,19 @@
       ]
     };
 
-function setFeatureLayerFilter(expression) {
-  layer.definitionExpression = expression;  
-}    
+    function setFeatureLayerFilter(expression) {
+      layer.definitionExpression = expression;  
+    }    
 
-view.watch("extent", function(newValue) {
-  filterItems();
-/*  //var series = $('#setFilter').val();
-  if (newValue < 6) {
-    // at low zooms levels show all charts
-    setFeatureLayerFilter("Shape__Area < ‎2206130383567.0");
-  } else if (newValue >= 6 && newValue < 8) {    
-    // as the users zooms in show only larger scale charts
-    setFeatureLayerFilter("Shape__Area < ‎471268823086"); 
-  } else if (newValue >= 8 && newValue < 9) {
-    setFeatureLayerFilter("Shape__Area < 154059814175");
-  }  else if (newValue >= 9 && newValue < 10) {
-    setFeatureLayerFilter("Shape__Area <‎ 20523650608");
-  } else if (newValue >= 10 && newValue < 11) {
-    setFeatureLayerFilter("Shape__Area < 6069706367");
-  } else if (newValue >= 11 && newValue < 12) {
-    setFeatureLayerFilter("Shape__Area < 21000000");
-  } else if (newValue >= 12 && newValue < 14) {
-    setFeatureLayerFilter("Shape__Area < 12000000");
-  } else if (newValue > 14) {
-    setFeatureLayerFilter("Shape__Area < 2000000");
-  }*/
-  //console.log("scale property changed: ", newValue);
-});
+    // watch the map extent
+   view.watch("stationary", (isStationary) => {
+      if (isStationary) {
+        filterItems();
+      }
+    });
 
     // Set the popup template on the layer
     layer.popupTemplate = template;     
-     
 
    // const controlVisitedTypeEl = document.getElementById("control-visited-type-el");
     const controlThemeEl = document.getElementById("theme");
@@ -419,7 +413,7 @@ view.watch("extent", function(newValue) {
 
   //  controlVisitedTypeEl.addEventListener("calciteRadioGroupChange", async (event) => { orderBy = event.target.value, filterItems() });
     controlThemeEl.addEventListener("calciteSelectChange", async (event) => { theme = event.target.value, filterItems() });
-    controlGeoEl.addEventListener("calciteCheckboxChange", async (event) => { georef = event.target.value, filterItems() });
+   // controlGeoEl.addEventListener("calciteCheckboxChange", async (event) => { georef = event.target.value, filterItems() });
     controlYearEl.addEventListener("calciteInputChange", async (event) => {
      var startYearVal = $("#startYear").val();
      var endYearVal = $("#startYear").val();
@@ -466,7 +460,7 @@ view.watch("extent", function(newValue) {
     let year = yearDefault;
 
     async function filterItems() {
-      view.popup.close();
+      //view.popup.close();
       // Create an empty array of search strings
       var searchStrings = [];
       var searchVal = $( "#searchDiv-input" ).val();
@@ -589,8 +583,23 @@ view.watch("extent", function(newValue) {
 
       map.add(current_layer);
 
-      // push the current layer to the back
-      map.reorder(layer, 1);
+      // push the current layer to the front
+      map.reorder(layer, 0);
+
+       // get the value of the range slider  
+                    let rangeVal = $( "#slider" ).val();
+                   
+                    current_layer.opacity = rangeVal / 100;  
+
+                    console.log(rangeVal);
+
+                    const range = document.getElementById('slider');
+
+range.addEventListener('calciteSliderInput', function(event) {
+  const value = event.target.value; // OR event.detail.value depending on Calcite version
+  current_layer.opacity = value / 100;
+  console.log(value);          
+                    });               
       updateViewer();
     };
 
